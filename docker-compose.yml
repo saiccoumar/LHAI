@@ -1,0 +1,36 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    network_mode: host
+    gpus: all
+    volumes:
+      - ./ollama:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:dev
+    container_name: open-webui
+    network_mode: host
+    depends_on:
+      - ollama
+    restart: always
+    environment:
+      - OLLAMA_BASE_URL=http://localhost:11434
+      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}
+    volumes:
+      - open-webui-data:/app/backend/data
+
+  faiss:
+    image: ghcr.io/chroma-core/chroma:latest
+    container_name: faiss
+    network_mode: host
+    restart: always
+    volumes:
+      - faiss-data:/data
+
+volumes:
+  open-webui-data:
+  faiss-data:
