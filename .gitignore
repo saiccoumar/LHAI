@@ -1,2 +1,4 @@
 ollama/*
 .env
+headers.txt
+data/*
