@@ -1,0 +1,54 @@
+servingEngineSpec:
+  runtimeClassName: ""
+  startupProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    failureThreshold: 180
+    httpGet:
+      path: /health
+      port: 8000
+  modelSpec:
+    - name: "qwen3-coder-next-fp8"
+      repository: "lmcache/vllm-openai"
+      tag: "latest"
+      modelURL: "Qwen/Qwen3-Coder-Next-FP8"
+
+      replicaCount: 1
+      requestGPU: 4                  # 4x A5000 (96GB VRAM)
+      requestCPU: 10
+      requestMemory: "100Gi"         
+      pvcStorage: "100Gi"            
+
+      # --- TOOL CALLING CONFIGURATION ---
+      enableTool: true
+      toolCallParser: "qwen3_coder"
+
+      vllmConfig:
+        enableChunkedPrefill: true
+        enablePrefixCaching: false    
+        maxModelLen: 65536           # Balanced context length for 96GB VRAM
+        extraArgs:
+          - "--download-dir"
+          - "/root/.cache/huggingface"
+          - "--tensor-parallel-size"
+          - "4"
+          - "--gpu-memory-utilization"
+          - "0.95"
+
+      lmcacheConfig:
+        enabled: true
+        cpuOffloadingBufferSize: "40" 
+        remoteStorageBackend: "file"
+        remoteStoragePath: "/mnt/lmcache" 
+
+      extraVolumeMounts:
+        - name: vllm-storage
+          mountPath: "/mnt/lmcache"
+
+      env:
+      - name: HUGGING_FACE_HUB_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: huggingface-credentials
+            key: HUGGING_FACE_HUB_TOKEN
+      shmSize: "40Gi"

@@ -1,4 +1,5 @@
 ollama/*
+production-stack/*
 .env
 headers.txt
 data/*
