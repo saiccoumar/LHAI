@@ -9,6 +9,7 @@ This repository contains my configurations for locally hosted AI. The docker com
 Ollama runs on port 11434
 OpenWebUI runs on port 8080
 Chroma runs on port 9000
+Hy3 (llama.cpp, 295B on 4x A5000) runs on port 8081 — see [hyv3/README.md](hyv3/README.md)
 
 ## Prompt Optimization and Recommended Autonomous Delivery Workflow
 

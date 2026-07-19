@@ -3,3 +3,9 @@ production-stack/*
 .env
 headers.txt
 data/*
+
+# Hy3 / llama.cpp local assets
+models/
+hyv3/llama.cpp-hyv3/
+*.gguf
+*.log

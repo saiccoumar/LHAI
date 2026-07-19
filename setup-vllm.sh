@@ -11,6 +11,8 @@ if [[ -z "${HF_TOKEN:-}" ]]; then
   exit 1
 fi
 
+minikube start 
+
 kubectl -n "${NAMESPACE}" create secret generic "${HF_SECRET_NAME}" \
   --from-literal=HUGGING_FACE_HUB_TOKEN="${HF_TOKEN}" \
   --dry-run=client -o yaml | kubectl apply -f -

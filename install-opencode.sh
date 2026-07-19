@@ -41,7 +41,10 @@ cat > "$CONFIG_FILE" <<'EOF'
       "models": {
         "qwen3-coder-next:q8_0": {
           "name": "qwen3-coder-next:q8_0"
-        }
+        },
+	"qwen-opus-coder:latest": {
+		"name":"qwen-opus-coder:latest"
+	}
       }
     }
   }

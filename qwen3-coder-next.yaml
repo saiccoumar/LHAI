@@ -1,9 +1,9 @@
 servingEngineSpec:
   runtimeClassName: ""
   startupProbe:
-    initialDelaySeconds: 30
-    periodSeconds: 10
-    failureThreshold: 180
+    initialDelaySeconds: 90       # 80B models take time to shard across 4 GPUs
+    periodSeconds: 15
+    failureThreshold: 30
     httpGet:
       path: /health
       port: 8000
@@ -14,9 +14,9 @@ servingEngineSpec:
       modelURL: "Qwen/Qwen3-Coder-Next-FP8"
 
       replicaCount: 1
-      requestGPU: 4                  # 4x A5000 (96GB VRAM)
-      requestCPU: 10
-      requestMemory: "100Gi"         
+      requestGPU: 4                  # 4x A5000 (96GB VRAM total)
+      requestCPU: 8                  # Reduced to leave room for OS/K8s
+      requestMemory: "90Gi"          # FIXED: Must be < 100GB physical RAM
       pvcStorage: "100Gi"            
 
       # --- TOOL CALLING CONFIGURATION ---
@@ -25,19 +25,19 @@ servingEngineSpec:
 
       vllmConfig:
         enableChunkedPrefill: true
-        enablePrefixCaching: false    
-        maxModelLen: 65536           # Balanced context length for 96GB VRAM
+        enablePrefixCaching: true    # REQUIRED for LMCache to function
+        maxModelLen: 32768           # 64k is too high for 96GB VRAM with an 80B model
         extraArgs:
-          - "--download-dir"
-          - "/root/.cache/huggingface"
           - "--tensor-parallel-size"
           - "4"
           - "--gpu-memory-utilization"
-          - "0.95"
+          - "0.90"               # Headroom for MoE activations
+          - "--trust-remote-code"
+          - "--enforce-eager"    # Prevents OOM/Halt during Graph Capture
 
       lmcacheConfig:
         enabled: true
-        cpuOffloadingBufferSize: "40" 
+        cpuOffloadingBufferSize: "30" # Reduced to fit in 80Gi RAM safely
         remoteStorageBackend: "file"
         remoteStoragePath: "/mnt/lmcache" 
 
@@ -51,4 +51,7 @@ servingEngineSpec:
           secretKeyRef:
             name: huggingface-credentials
             key: HUGGING_FACE_HUB_TOKEN
-      shmSize: "40Gi"
+      - name: LMCACHE_LOCAL_DISK
+        value: "file:///mnt/lmcache"
+      
+      shmSize: "40Gi" # Necessary for NCCL communication between the 4 GPUs
